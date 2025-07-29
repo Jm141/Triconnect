@@ -31,7 +31,12 @@ class Teacher extends Model
     ];
 
     public function user()
-{
-    return $this->hasOne(User::class, 'userCode', 'staff_code');
-}
+    {
+        return $this->hasOne(User::class, 'userCode', 'staff_code');
+    }
+
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class, 'teacher_staff_code', 'staff_code');
+    }
 }

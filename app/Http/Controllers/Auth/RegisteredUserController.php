@@ -45,6 +45,32 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        // Check if this is the super admin
+        if ($user->userCode === 'Admin=349262938') {
+            // Super admin - redirect to main dashboard
+            return redirect()->route('dashboard');
+        } else {
+            // For regular users, get their access from user_access_links
+            $userAccess = \App\Models\UserAccess::where('userCode', $user->userCode)->first();
+
+            if ($userAccess) {
+                session(['userAccess' => $userAccess]);
+                
+                // Redirect based on user access type
+                if (strpos($userAccess->access, 'teacher') !== false) {
+                    return redirect()->route('teacher.dashboard');
+                } elseif (strpos($userAccess->access, 'parent') !== false) {
+                    return redirect()->route('parent.dashboard');
+                } elseif (strpos($userAccess->access, 'principal') !== false) {
+                    return redirect()->route('principal.dashboard');
+                } else {
+                    // Default fallback to userDashboard
+                    return redirect()->route('userDashboard');
+                }
+            } else {
+                // No access found - redirect to userDashboard as fallback
+                return redirect()->route('userDashboard');
+            }
+        }
     }
 }

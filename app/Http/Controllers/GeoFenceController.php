@@ -21,10 +21,35 @@ class GeoFenceController extends Controller
     }
 
     public function getGeofences()
-{
-    $geofences = Geofence::all();
-    return response()->json($geofences);
-}
+    {
+        try {
+            $geofences = GeoFence::all();
+            \Log::info('Fetched geofences:', ['count' => $geofences->count(), 'data' => $geofences->toArray()]);
+            return response()->json($geofences);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching geofences: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch geofences', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function debugGeofences()
+    {
+        try {
+            $count = GeoFence::count();
+            $geofences = GeoFence::all();
+            return response()->json([
+                'total_count' => $count,
+                'geofences' => $geofences,
+                'table_exists' => \Schema::hasTable('geofences'),
+                'model_class' => get_class(new GeoFence())
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+    }
 
 
     
@@ -54,13 +79,13 @@ class GeoFenceController extends Controller
             'neLng' => 'nullable|numeric'
         ]);
 
-        $geofence = Geofence::where('name', $data['name'])->first();
+        $geofence = GeoFence::where('name', $data['name'])->first();
 
         if ($geofence) {
             $geofence->update($data);
             return response()->json(['message' => 'Geofence updated successfully.']);
         } else {
-            Geofence::create($data);
+            GeoFence::create($data);
             return response()->json(['message' => 'Geofence saved successfully.']);
         }
     }
@@ -71,7 +96,7 @@ class GeoFenceController extends Controller
             'type' => 'required|string',
         ]);
 
-        $geofence = Geofence::findOrFail($request->id);
+        $geofence = GeoFence::findOrFail($request->id);
 
         if ($request->type === 'circle') {
             $geofence->lat = $request->lat;

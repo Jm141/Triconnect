@@ -16,6 +16,11 @@ use App\Http\Controllers\GeoFenceController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ParentDashboardController;
+use App\Http\Controllers\UserTeacherController;
+use App\Http\Controllers\BillingLogController;
+use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\QrCodeController;
 
 
 Route::get('/', function () {
@@ -30,6 +35,24 @@ Route::post('/insert_location', [GeoFenceController::class, 'insertLocation'])->
 Route::post('/checkGeofence', [GeoFenceController::class, 'checkGeoFence'])->middleware('auth');
 
 Route::get('userDashboard', [UserController::class, 'showDashboard'])->name('userDashboard');
+
+// Logout route for user dashboard
+Route::post('/userLogout', [UserController::class, 'logout'])->name('userLogout');
+
+// Parent Dashboard Routes
+Route::get('/parent/dashboard', [ParentDashboardController::class, 'index'])->name('parent.dashboard');
+Route::get('/parent/student/{studentCode}/location', [ParentDashboardController::class, 'studentLocationHistory'])->name('parent.student.location');
+Route::get('/parent/real-time-locations', [ParentDashboardController::class, 'getRealTimeLocations'])->name('parent.real-time-locations');
+Route::get('/parent/address/{lat}/{lng}', [ParentDashboardController::class, 'getAddress'])->name('parent.address');
+
+Route::get('/attendance-dashboard', [UserTeacherController::class, 'attendanceDashboard'])->name('attendance.dashboard');
+Route::post('/attendance/historical', [UserTeacherController::class, 'getHistoricalAttendance'])->name('attendance.historical');
+Route::post('/attendance/class', [UserTeacherController::class, 'getClassAttendance'])->name('attendance.class');
+Route::post('/attendance/day-details', [UserTeacherController::class, 'getDayDetails'])->name('attendance.dayDetails');
+Route::get('/attendance/export', [UserTeacherController::class, 'exportAttendance'])->name('attendance.export');
+Route::get('/teacher/dashboard', function () {
+    return view('teacher.dashboard');
+})->name('teacher.dashboard');
     
 Route::post('/userLogin', [UserController::class, 'login'])->name('userLogin');
 
@@ -48,7 +71,6 @@ Route::get('roomList', [AdminController::class, 'roomList'])->name('roomList');
 Route::get('student-list', [AdminController::class, 'studentList'])->name('student-list');
 Route::get('subscription', [AdminController::class, 'subscription'])->name('subscription');
 Route::post('/admin/{familyCode}/recordPayment', [AdminController::class, 'recordPayment'])->name('admin.recordPayment');
-Route::get('/billing', [AdminController::class, 'billing'])->name('admin.billing');
 
 
 
@@ -112,16 +134,29 @@ Route::middleware('auth')->group(function () {
     //GeoFences Routes
     Route::resource('geofences', GeoFenceController::class);
 
-    //Subscription Routes
+    // Billing Management Routes
+    Route::get('/billing', [BillingLogController::class, 'index'])->name('billing.index');
+    Route::get('/billing/generate-all', [BillingLogController::class, 'generateAllBilling'])->name('billing.generate-all');
+    Route::get('/billing/family/{familyCode}/generate', [BillingLogController::class, 'generateFamilyBilling'])->name('billing.generate-family');
+    Route::get('/billing/{billingId}/mark-paid', [BillingLogController::class, 'markAsPaid'])->name('billing.mark-paid');
+    Route::get('/billing/{billingId}/mark-pending', [BillingLogController::class, 'markAsPending'])->name('billing.mark-pending');
+    Route::get('/billing/{billingId}/delete', [BillingLogController::class, 'destroy'])->name('billing.delete');
+    Route::get('/billing/stats', [BillingLogController::class, 'getBillingStats'])->name('billing.stats');
+    Route::get('/billing/overdue', [BillingLogController::class, 'getOverdueBilling'])->name('billing.overdue');
+    Route::get('/billing/export', [BillingLogController::class, 'exportBilling'])->name('billing.export');
+
+    // Subscription Routes
     Route::resource('subscription', SubscriptionController::class);
+    Route::get('/subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
 
   
     //Store GeoFence
-    Route::post('/save_geofence', [GeofenceController::class, 'store']);
+    Route::post('/save_geofence', [GeoFenceController::class, 'store']);
   
-Route::get('/geofence', [GeofenceController::class, 'create']);
-Route::post('/update-geofence', [GeofenceController::class, 'update']);
-Route::get('/get-geofences', [GeofenceController::class, 'getGeofences']);
+Route::get('/geofence', [GeoFenceController::class, 'create']);
+Route::post('/update-geofence', [GeoFenceController::class, 'update']);
+Route::get('/get-geofences', [GeoFenceController::class, 'getGeofences']);
+Route::get('/debug-geofences', [GeoFenceController::class, 'debugGeofences']);
     //User Routes
  
 
@@ -140,6 +175,39 @@ Route::get('/get-geofences', [GeofenceController::class, 'getGeofences']);
     Route::get('/rooms/qr/{room_code}', [RoomController::class, 'generateQr'])->name('rooms.qr');
    //Billing Logs
     Route::get('/billing-logs', [SubscriptionController::class, 'billingLogsIndex'])->name('billing_logs.index');
+    
+    //Schedule Routes
+    Route::resource('schedules', ScheduleController::class);
+    Route::get('/schedules/weekly', [ScheduleController::class, 'weeklyView'])->name('schedules.weekly');
+    Route::post('/schedules/{schedule}/toggle-status', [ScheduleController::class, 'toggleStatus'])->name('schedules.toggle-status');
+
+    //QR Code Routes
+    Route::get('/qr/generate', [QrCodeController::class, 'generateQr'])->name('qr.generate');
+    Route::get('/qr/generate/teacher', [QrCodeController::class, 'generateTeacherQr'])->name('qr.generate.teacher');
+    Route::get('/qr/generate/{schedule}', [QrCodeController::class, 'generateScheduleQr'])->name('qr.generate.schedule');
+    
+    // Alternative QR Generation Routes
+    Route::get('/qr/advanced', [QrCodeController::class, 'generateAdvancedQr'])->name('qr.advanced');
+    Route::post('/qr/custom', [QrCodeController::class, 'generateCustomQr'])->name('qr.custom');
+    Route::get('/qr/quick', [QrCodeController::class, 'generateQuickQr'])->name('qr.quick');
+    
+    Route::post('/qr/scan', [QrCodeController::class, 'scanQr'])->name('qr.scan');
+    Route::get('/qr/history', [QrCodeController::class, 'attendanceHistory'])->name('qr.history');
+
+    // Principal Routes
+    Route::prefix('principal')->name('principal.')->group(function () {
+        Route::get('/dashboard', [App\Http\Controllers\PrincipalController::class, 'dashboard'])->name('dashboard');
+        Route::get('/students', [App\Http\Controllers\PrincipalController::class, 'students'])->name('students');
+        Route::get('/teachers', [App\Http\Controllers\PrincipalController::class, 'teachers'])->name('teachers');
+        Route::get('/schedules', [App\Http\Controllers\PrincipalController::class, 'schedules'])->name('schedules');
+        Route::get('/notifications', [App\Http\Controllers\PrincipalController::class, 'notifications'])->name('notifications');
+        Route::get('/notifications/create', [App\Http\Controllers\PrincipalController::class, 'createNotification'])->name('notifications.create');
+        Route::post('/notifications', [App\Http\Controllers\PrincipalController::class, 'storeNotification'])->name('notifications.store');
+        Route::get('/notifications/{id}', [App\Http\Controllers\PrincipalController::class, 'viewNotification'])->name('notifications.view');
+        Route::delete('/notifications/{id}', [App\Http\Controllers\PrincipalController::class, 'deleteNotification'])->name('notifications.delete');
+        Route::get('/stats/students', [App\Http\Controllers\PrincipalController::class, 'studentStats'])->name('stats.students');
+        Route::get('/stats/teachers', [App\Http\Controllers\PrincipalController::class, 'teacherStats'])->name('stats.teachers');
+    });
 });
 
 

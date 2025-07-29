@@ -15,6 +15,91 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     
     <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-gray: #ecf0f1;
+            --dark-gray: #7f8c8d;
+            --white: #ffffff;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+            --border-radius: 8px;
+        }
+
+        .navbar-brand img {
+            width: 40px;
+            height: 40px;
+            margin-right: 12px;
+            border-radius: 50%;
+            background: var(--white);
+            padding: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .main-sidebar {
+            transition: width 0.3s ease;
+        }
+
+        .main-sidebar.collapsed {
+            width: 70px;
+        }
+
+        .main-sidebar.collapsed .user-panel .info,
+        .main-sidebar.collapsed .nav-link p {
+            display: none;
+        }
+
+        .main-sidebar.collapsed .user-panel {
+            justify-content: center;
+            padding: 1rem 0.5rem;
+        }
+
+        .main-sidebar.collapsed .nav-link {
+            justify-content: center;
+            padding: 0.875rem 0.5rem;
+        }
+
+        .main-sidebar.collapsed .nav-icon {
+            margin-right: 0;
+            font-size: 1.2rem;
+        }
+
+        .content-wrapper {
+            transition: margin-left 0.3s ease;
+        }
+
+        .content-wrapper.collapsed {
+            margin-left: 70px;
+        }
+
+        .sidebar-toggle {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: var(--accent-color);
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .sidebar-toggle:hover {
+            background: #2980b9;
+            transform: scale(1.1);
+        }
+
         .sidebar {
             width: 250px;
             height: 100vh;
@@ -63,26 +148,43 @@
         <p>Welcome, Admin!</p>
     
     <div class="wrapper">
+        <!-- Sidebar Toggle Button -->
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fa fa-bars"></i>
+        </button>
+
         <nav class="main-header navbar navbar-expand navbar-dark bg-triconnect shadow-lg">
-            <a href="#" class="navbar-brand flex items-center">
-                <img src="{{ asset('images/triconnect.png') }}" alt="Triconnect Logo" class="w-10 h-10 rounded-full mr-2 bg-white p-1 shadow" />
+            <div class="navbar-brand d-flex align-items-center">
+                <img src="{{ asset('images/Triconnect.png') }}" alt="Triconnect Logo" style="height: 35px; margin-right: 10px;">
                 <span class="text-white text-2xl font-bold tracking-wide">Triconnect</span>
-            </a>
+            </div>
         </nav>
 
-        <aside class="main-sidebar sidebar-dark-primary elevation-4 bg-triconnect-dark">
+        <aside class="main-sidebar sidebar-dark-primary elevation-4 bg-triconnect-dark" id="sidebar">
             <div class="sidebar">
                 <div class="user-panel mt-3 pb-3 mb-3 d-flex">
                     <div class="image">
-                        <img src="https://via.placeholder.com/150" class="img-circle elevation-2" alt="User Image">
+                        <img src="/images/Triconnect.png" class="img-circle elevation-2" alt="User Image" onerror="this.onerror=null; this.src='https://via.placeholder.com/150/3498db/ffffff?text=T';">
                     </div>
                     <div class="info">
-                        <a href="#" class="d-block text-white">User Name</a>
+                        <a href="#" class="d-block text-white">Admin User</a>
                     </div>
                 </div>
 
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                        <li class="nav-item">
+                            <a href="/family-list" class="nav-link text-triconnect-accent hover:bg-triconnect-light">
+                                <i class="nav-icon fa fa-home"></i>
+                                <p>Family List</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/student-list" class="nav-link text-triconnect-accent hover:bg-triconnect-light">
+                                <i class="nav-icon fa fa-graduation-cap"></i>
+                                <p>Student List</p>
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a href="/teacher-list" class="nav-link text-triconnect-accent hover:bg-triconnect-light">
                                 <i class="nav-icon fa fa-users"></i>
@@ -90,33 +192,27 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/notifications" class="nav-link text-triconnect-accent hover:bg-triconnect-light">
-                                <i class="nav-icon fa fa-bell"></i>
-                                <p>Notifications</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
                             <a href="/roomList" class="nav-link text-triconnect-accent hover:bg-triconnect-light">
                                 <i class="nav-icon fa fa-building"></i>
-                                <p>Room List</p>
+                                <p>Room</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/family-list" class="nav-link">
-                                <i class="nav-icon fa fa-home"></i>
-                                <p>Family List</p>
+                            <a href="/geofence" class="nav-link text-triconnect-accent hover:bg-triconnect-light">
+                                <i class="nav-icon fa fa-map-marker-alt"></i>
+                                <p>Geofence</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/student-list" class="nav-link">
-                                <i class="nav-icon fa fa-graduation-cap"></i>
-                                <p>Student List</p>
+                            <a href="/subscription" class="nav-link text-triconnect-accent hover:bg-triconnect-light">
+                                <i class="nav-icon fa fa-credit-card"></i>
+                                <p>Subscription Plans</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/subscription" class="nav-link">
-                                <i class="nav-icon fa fa-graduation-cap"></i>
-                                <p>Subscription List</p>
+                            <a href="{{ route('billing.index') }}" class="nav-link text-triconnect-accent hover:bg-triconnect-light">
+                                <i class="fas fa-file-invoice-dollar text-triconnect-accent"></i>
+                                <p>Billing Logs</p>
                             </a>
                         </li>
                     </ul>
@@ -124,90 +220,50 @@
             </div>
         </aside>
 
-        <div class="content-wrapper">
+        <div class="content-wrapper" id="contentWrapper">
             <section class="content">
                 <div class="container-fluid">
-                   
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Admin Dashboard</h3>
+                                </div>
+                                <div class="card-body">
+                                    <p>Welcome to the Admin Dashboard. Use the navigation menu to manage:</p>
+                                    <ul>
+                                        <li><strong>Family List:</strong> Manage family information and relationships</li>
+                                        <li><strong>Student List:</strong> View and manage student records</li>
+                                        <li><strong>Teacher List:</strong> Manage teacher information</li>
+                                        <li><strong>Room:</strong> Manage room assignments and QR codes</li>
+                                        <li><strong>Geofence:</strong> Set up and manage geofencing areas</li>
+                                        <li><strong>Subscription Plans:</strong> Manage subscription plans and pricing</li>
+                                        <li><strong>Billing Logs:</strong> View and manage billing records</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>
     </div>
     @elseif (strpos(session('userAccess')->access, 'teacher') !== false)
-    <p>Teacher Good Morning, {{ session('userAccess')->access }}</p>
-    {{-- <meta name="csrf-token" content="{{ csrf_token() }}">
-<meta name="csrf-token" content="{{ csrf_token() }}"> --}}
-
-    <div>
-        <p><strong>Latitude:</strong> <span id="latitude">Fetching...</span></p>
-        <p><strong>Longitude:</strong> <span id="longitude">Fetching...</span></p>
-        <p><strong>Address:</strong> <span id="address">Fetching...</span></p>
-    </div>
-
-<button id="scanQrBtn">Scan QR Code</button>
-<input type="file" accept="image/*" id="qrInput" capture="environment" style="display: none;">
-
-    
-    <div id="map" style="height: 400px; margin-top: 20px;"></div>
-    
-   
-    {{-- <meta name="csrf-token" content="{{ csrf_token() }}"> --}}
-    
-    @elseif (strpos(session('userAccess')->access, 'parent') !== false)
-
-    <p>Hello  {{ session('userAccess')->access }} </p>
-    <div class="wrapper">
-        <nav class="main-header navbar navbar-expand navbar-dark">
-            <a href="#" class="navbar-brand">Dashboard</a>
-        </nav>
-
-        <aside class="main-sidebar sidebar-dark-primary elevation-4">
-            <div class="sidebar">
-                <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-                    <div class="image">
-                        <img src="https://via.placeholder.com/150" class="img-circle elevation-2" alt="User Image">
-                    </div>
-                    <div class="info">
-                        <a href="#" class="d-block">User Name</a>
-                    </div>
-                </div>
-
-                <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                        
-                        <li class="nav-item">
-                            <a href="/student" class="nav-link">
-                                <i class="nav-icon fa fa-graduation-cap"></i>
-                                <p>Student List</p>
-                            </a>
-                        </li><li class="nav-item">
-                            <li class="nav-item">
-                                <a href="{{ route('student.create', ['family_code' => session('userAccess')->userCode]) }}" class="nav-link">
-                                    <i class="nav-icon fa fa-graduation-cap"></i>
-                                    <p>Add Student</p>
-                                </a>
-                                
-                            </li>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('student.edit', session('userAccess')->userCode) }}" class="nav-link">
-                                <i class="nav-icon fa fa-user"></i>
-                                <p>Edit Profile</p>
-                            </a>
-                        </li>
-                        
-                    </ul>
-                </nav>
-            </div>
-        </aside>
-
-        <div class="content-wrapper">
-            <section class="content">
-                <div class="container-fluid">
-                   
-                </div>
-            </section>
+        <script>
+            window.location.href = '/teacher/dashboard';
+        </script>
+        <div class="text-center p-5">
+            <p>Redirecting to Teacher Dashboard...</p>
+            <p>If you are not redirected automatically, <a href="/teacher/dashboard">click here</a>.</p>
         </div>
-    </div>
+    @elseif (strpos(session('userAccess')->access, 'parent') !== false)
+        <script>
+            window.location.href = '/parent/dashboard';
+        </script>
+        <div class="text-center p-5">
+            <p>Redirecting to Parent Dashboard...</p>
+            <p>If you are not redirected automatically, <a href="/parent/dashboard">click here</a>.</p>
+        </div>
     @elseif (strpos(session('userAccess')->access, 'student') !== false)
 <p> welcome studnet</p>
 
@@ -356,10 +412,54 @@ fetch("{{ route('attendance.scan') }}".trim(), {
 }
 </script>
 
+    @elseif (strpos(session('userAccess')->access, 'principal') !== false)
+        <script>
+            window.location.href = '/principal/dashboard';
+        </script>
+        <div class="text-center p-5">
+            <p>Redirecting to Principal Dashboard...</p>
+            <p>If you are not redirected automatically, <a href="/principal/dashboard">click here</a>.</p>
+        </div>
 @else
     <p>Access Denied</p>
 @endif
 
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/js/adminlte.min.js"></script>
+    <script>
+        // Sidebar toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            const contentWrapper = document.getElementById('contentWrapper');
+            
+            // Check if sidebar state is saved in localStorage
+            const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            
+            if (sidebarCollapsed) {
+                sidebar.classList.add('collapsed');
+                contentWrapper.classList.add('collapsed');
+            }
+
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                contentWrapper.classList.toggle('collapsed');
+                
+                // Save state to localStorage
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            });
+
+            // Add tooltips for collapsed sidebar
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('mouseenter', function() {
+                    if (sidebar.classList.contains('collapsed')) {
+                        const icon = this.querySelector('.nav-icon');
+                        const text = this.querySelector('p').textContent;
+                        icon.title = text;
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

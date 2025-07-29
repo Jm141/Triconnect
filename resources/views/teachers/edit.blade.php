@@ -66,10 +66,15 @@
         <div class="form-group">
             <label for="role">User Role:</label>
             <select name="role" id="role" class="form-control">
-                <option value="teacher" {{ $teacher->role == 'teacher' ? 'selected' : '' }}>Teacher</option>
-                <option value="principal" {{ $teacher->role == 'principal' ? 'selected' : '' }}>Principal</option>
-                <option value="admin" {{ $teacher->role == 'admin' ? 'selected' : '' }}>Admin</option>
+                <option value="teacher" {{ $currentAccess == 'teacher' ? 'selected' : '' }}>Teacher</option>
+                <option value="principal" {{ $currentAccess == 'principal' ? 'selected' : '' }}>Principal</option>
+                <option value="admin" {{ $currentAccess == 'admin' ? 'selected' : '' }}>Admin</option>
             </select>
+            <small class="form-text text-muted">
+                <strong>Teacher:</strong> Can view attendance, generate QR codes, manage their classes<br>
+                <strong>Principal:</strong> Can view all students, teachers, schedules, and send notifications<br>
+                <strong>Admin:</strong> Full system access including user management and system settings
+            </small>
         </div>
 
         <div class="form-group">

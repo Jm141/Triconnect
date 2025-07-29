@@ -1,100 +1,154 @@
 @extends('adminlte::page')
-@section('title', 'Room List')
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-@section('content_header')
-    <h1>Room List</h1>
-@endsection
+@section('title', 'Room Management - Triconnect')
+
+@push('css')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap4.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.bootstrap4.min.css">
+    <style>
+        .dataTables_wrapper .dataTables_filter {
+            display: block !important;
+            visibility: visible !important;
+            margin-bottom: 10px;
+        }
+        .dataTables_wrapper .dataTables_filter input {
+            margin-left: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+        }
+        .dataTables_wrapper .dataTables_length {
+            display: block !important;
+            visibility: visible !important;
+            margin-bottom: 10px;
+        }
+    </style>
+@endpush
 
 @section('content')
-
-<form action="{{ route('rooms.index') }}" method="GET" class="mb-3">
-    <div class="input-group">
-        <input type="text" name="search" class="form-control" placeholder="Search by room name" value="{{ request('search') }}">
-        <button type="submit" class="btn btn-primary">Search</button>
-    </div>
-</form>
-
-@if (session('success'))
-    <script>
-        Swal.fire({
-            icon: 'success',
-            title: 'Success!',
-            text: '{{ session('success') }}',
-        });
-    </script>
-@endif
-
-<a href="{{ route('rooms.create') }}" class="btn btn-primary mb-3">Add Room</a>
-<table class="table table-bordered" id="roomsTable">
-    <thead>
-        <tr>
-            <th>Room Name</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach ($rooms as $room)
-            <tr>
-                <td>{{ $room->name }}</td>
-                <td>
-                    <button class="btn btn-info generate-qr" data-room-name="{{ $room->name }}" data-room-code="{{ $room->room_code }}">Generate QR</button>
-                </td>
-            </tr>
-        @endforeach
-    </tbody>
-</table>
-
-<div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content p-5">
-            <div class="modal-header flex justify-between items-center border-b pb-2">
-                <h5 class="modal-title text-xl font-semibold" id="qrModalLabel">QR Code</h5>
-                <button type="button" class="close text-gray-500 hover:text-gray-700" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body flex flex-col items-center justify-center space-y-4 p-4">
-                <h4 id="roomName" class="text-lg font-semibold"></h4>
-                <div id="qrCodeContainer" class="flex justify-center items-center min-h-[200px]"></div> <!-- QR Code centered -->
-            </div>
-            <div class="modal-footer flex justify-end space-x-3 border-t pt-2">
-                <button type="button" class="btn btn-secondary bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded" onclick="printQrCode()">Print</button>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fa fa-building"></i> Room Management
+                    </h3>
+                    <div class="card-tools">
+                        <a href="{{ route('rooms.create') }}" class="btn btn-primary btn-sm">
+                            <i class="fa fa-plus"></i> Add New Room
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {{-- Original content from the rooms index page --}}
+                    @if(isset($rooms) && count($rooms) > 0)
+                        <div class="table-responsive">
+                            <table id="roomsTable" class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Room Name</th>
+                                        <th>Room Code</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($rooms as $room)
+                                        <tr>
+                                            <td>{{ $room->id }}</td>
+                                            <td>{{ $room->name }}</td>
+                                            <td>{{ $room->room_code }}</td>
+                                            <td>
+                                                <span class="badge badge-{{ $room->status === 'active' ? 'success' : 'warning' }}">
+                                                    {{ $room->status ?? 'Unknown' }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="{{ route('rooms.edit', $room->id) }}" class="btn btn-sm btn-info">
+                                                    <i class="fa fa-edit"></i> Edit
+                                                </a>
+                                                <button class="btn btn-sm btn-danger delete-room" data-id="{{ $room->id }}">
+                                                    <i class="fa fa-trash"></i> Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="alert alert-info">
+                            <i class="fa fa-info-circle"></i> No rooms found. 
+                            <a href="{{ route('rooms.create') }}" class="alert-link">Add your first room</a>.
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
-</div>
-
-
-<script>
-    $(document).ready(function() {
-        // $('#roomsTable').DataTable();
-
-        $('.generate-qr').click(function() {
-            var roomName = $(this).data('room-name');
-            var roomCode = $(this).data('room-code');
-            $('#roomName').text(roomName);
-            $('#qrCodeContainer').empty(); 
-            new QRCode(document.getElementById('qrCodeContainer'), {
-                text: roomCode,
-                width: 200,
-                height: 200
-            });
-            $('#qrModal').modal('show');
-        });
-    });
-
-    function printQrCode() {
-        var printContents = document.getElementById('qrCodeContainer').innerHTML;
-        var originalContents = document.body.innerHTML;
-        document.body.innerHTML = printContents;
-        window.print();
-        document.body.innerHTML = originalContents;
-        location.reload();
-    }
-</script>
 @endsection
+
+@push('js')
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap4.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.bootstrap4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@endpush
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTable
+            $('#roomsTable').DataTable({
+                responsive: true,
+                dom: 'Blfrtip',
+                buttons: [
+                    'copy', 'csv', 'excel', 'pdf', 'print'
+                ],
+                searching: true,
+                ordering: true,
+                info: true,
+                lengthChange: true,
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                language: {
+                    search: "Search:",
+                    lengthMenu: "Show _MENU_ entries per page",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    infoEmpty: "Showing 0 to 0 of 0 entries",
+                    infoFiltered: "(filtered from _MAX_ total entries)"
+                }
+            });
+
+            // Delete room functionality
+            $('.delete-room').click(function() {
+                const roomId = $(this).data('id');
+                
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Add your delete logic here
+                        Swal.fire(
+                            'Deleted!',
+                            'Room has been deleted.',
+                            'success'
+                        );
+                    }
+                });
+            });
+        });
+    </script>
+@endpush

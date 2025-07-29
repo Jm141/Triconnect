@@ -332,11 +332,6 @@ return [
             'icon' => 'fas fa-user-graduate',
         ],
         [
-            'text' => 'Parents',
-            'url' => 'parents',
-            'icon' => 'fas fa-users',
-        ],
-        [
             'text' => 'Rooms',
             'url' => 'rooms',
             'icon' => 'fas fa-door-open',
@@ -350,6 +345,16 @@ return [
             'text' => 'Geofences',
             'url' => 'geofences',
             'icon' => 'fas fa-map-marker-alt',
+        ],
+        [
+            'text' => 'Subscription Plans',
+            'url' => 'subscription',
+            'icon' => 'fas fa-credit-card',
+        ],
+        [
+            'text' => 'Billing Logs',
+            'url' => 'billing',
+            'icon' => 'fas fa-file-invoice-dollar',
         ],
         [
             'text' => 'Settings',

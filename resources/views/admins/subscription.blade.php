@@ -7,6 +7,8 @@
     <title>Teacher List</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap4.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .content-wrapper {
@@ -19,11 +21,19 @@
     </style>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
-    <p>Access: {{ session('userAccess')->access }}</p>
+    @if(session('userAccess'))
+        <p>Access: {{ session('userAccess')->access }}</p>
 
-                    @if (strpos(session('userAccess')->access, 'admin') !== false)
-                        <p>Welcome, Admin!</p>
-                    
+        @if (strpos(session('userAccess')->access, 'admin') !== false)
+            <p>Welcome, Admin!</p>
+        @elseif (strpos(session('userAccess')->access, 'teacher') !== false)
+            <p>Teacher Good Morning, {{ session('userAccess')->access }}</p>
+        @else
+            <p>Access Denied</p>
+        @endif
+    @else
+        <p>No access information available</p>
+    @endif
 
     <div class="wrapper">
         <!-- Navbar -->
@@ -38,7 +48,7 @@
                 <!-- Sidebar user panel (optional) -->
                 <div class="user-panel mt-3 pb-3 mb-3 d-flex">
                     <div class="image">
-                        <img src="https://via.placeholder.com/150" class="img-circle elevation-2" alt="User Image">
+                        <img src="/images/Triconnect.png" class="img-circle elevation-2" alt="User Image" onerror="this.onerror=null; this.src='https://via.placeholder.com/150/3498db/ffffff?text=T';">
                     </div>
                     <div class="info">
                         <a href="#" class="d-block">User Name</a>
@@ -80,8 +90,14 @@
                         </li>
                         <li class="nav-item">
                             <a href="/subscription" class="nav-link">
-                                <i class="nav-icon fa fa-graduation-cap"></i>
-                                <p>Subscription List</p>
+                                <i class="nav-icon fa fa-credit-card"></i>
+                                <p>Subscription Plans</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('billing.index') }}" class="nav-link">
+                                <i class="nav-icon fa fa-credit-card"></i>
+                                <p>Billing Logs</p>
                             </a>
                         </li>
                     </ul>
@@ -245,15 +261,50 @@
                         });
                     </script>
                 </div>
-                @elseif (strpos(session('userAccess')->access, 'teacher') !== false)
-                        <p>Teacher Good Morning, {{ session('userAccess')->access }}</p>
-                    @else
-                        <p>Access Denied</p>
-                    @endif
             </section>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/js/adminlte.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap4.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            $('#subscriptionPlansTable').DataTable({
+                responsive: true,
+                language: {
+                    search: "Search subscription plans:",
+                    lengthMenu: "Show _MENU_ plans per page",
+                    info: "Showing _START_ to _END_ of _TOTAL_ plans",
+                    infoEmpty: "No subscription plans available",
+                    infoFiltered: "(filtered from _MAX_ total plans)"
+                },
+                pageLength: 10,
+                order: [[0, 'asc']] // Sort by plan name ascending
+            });
+
+            $(document).on('click', '.update-btn', function(){
+                console.log('Update button clicked');
+
+                var id = $(this).data('id');
+                var name = $(this).data('name');
+                var base_amount = $(this).data('base_amount');
+                var additional_multiplier = $(this).data('additional_multiplier');
+
+                console.log({ id, name, base_amount, additional_multiplier });
+
+                var url = '/admin/' + id;
+                $('#updateSubscriptionForm').attr('action', url);
+
+                $('#update_name').val(name);
+                $('#update_base_amount').val(base_amount);
+                $('#update_additional_multiplier').val(additional_multiplier);
+            });
+        });
+    </script>
 </body>
 </html>

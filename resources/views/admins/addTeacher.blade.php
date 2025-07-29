@@ -36,7 +36,7 @@
                 <!-- Sidebar user panel (optional) -->
                 <div class="user-panel mt-3 pb-3 mb-3 d-flex">
                     <div class="image">
-                        <img src="https://via.placeholder.com/150" class="img-circle elevation-2" alt="User Image">
+                        <img src="/images/Triconnect.png" class="img-circle elevation-2" alt="User Image" onerror="this.onerror=null; this.src='https://via.placeholder.com/150/3498db/ffffff?text=T';">
                     </div>
                     <div class="info">
                         <a href="#" class="d-block">User Name</a>
@@ -144,6 +144,17 @@
                                     <div class="form-group">
                                         <label for="password">Password</label>
                                         <input type="password" id="password" name="password" class="form-control" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="access_level">Access Level</label>
+                                        <select id="access_level" name="access_level" class="form-control" required>
+                                            <option value="">Select Access Level</option>
+                                            <option value="super_admin">Super Admin</option>
+                                            <option value="admin">Admin</option>
+                                            <option value="principal">Principal</option>
+                                            <option value="teacher">Teacher</option>
+                                        </select>
                                     </div>
                                 </div>
                     

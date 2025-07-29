@@ -10,4 +10,8 @@ class Room extends Model
     use HasFactory;
     protected $fillable = ['name', 'room_code','status'];
 
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class, 'room_code', 'room_code');
+    }
 }

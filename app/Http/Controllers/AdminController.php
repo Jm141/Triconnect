@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Admin;
 use App\Models\User;
 use App\Models\Teacher;
 use App\Models\Student;
 use App\Models\Parents;
 use App\Models\Family;
 use App\Models\Room;
-
+use App\Models\UserAccess;
+use App\Models\BillingLog;
+use App\Models\SubscriptionPlan;
 
 use Illuminate\Http\Request;
 
@@ -44,7 +45,7 @@ class AdminController extends Controller
     })->get();
         $students = Student::with(['parents','family'])->get();
     // return view('students.index', compact('students'));
-        return view('admins.student', compact('students'));
+        return view('students.index', compact('students'));
     }
 
     public function subscription()
@@ -52,37 +53,44 @@ class AdminController extends Controller
         // Retrieve all the subscription plans for display in the admin view.
         $subscriptionPlans = SubscriptionPlan::all();
 
-        return view('admin.subscription', compact('subscriptionPlans'));
+        return view('subscription.index', compact('subscriptionPlans'));
     }
 
     public function recordPayment($familyCode)
-{
-    $family = Family::where('family_code', $familyCode)->first();
-    
-    if (!$family) {
-        return redirect()->back()->with('error', 'Family not found');
+    {
+        $family = Family::where('family_code', $familyCode)->first();
+        
+        if (!$family) {
+            return redirect()->back()->with('error', 'Family not found');
+        }
+
+        $billingAmount = $family->calculateBillingAmount();
+
+        $subscriptionPlan = $family->subscriptionPlan();
+        if (!$subscriptionPlan) {
+            return redirect()->back()->with('error', 'Subscription plan not found');
+        }
+
+        // Create billing log entry
+        $billingLog = new BillingLog();
+        $billingLog->family_code = $family->family_code;
+        $billingLog->subscription_plan = $family->subscription;
+        $billingLog->base_amount = $subscriptionPlan->base_amount;
+        $billingLog->additional_multiplier = $subscriptionPlan->additional_multiplier;
+        $billingLog->amount_due = $billingAmount;
+        $billingLog->status = 'paid';
+        $billingLog->billing_date = now();
+        $billingLog->paid_date = now();
+        $billingLog->payment_method = 'manual';
+        $billingLog->student_count = $family->students()->count();
+        $billingLog->save();
+
+        // Update family status
+        $family->status = 'Paid';
+        $family->save();
+
+        return redirect()->back()->with('success', "Payment recorded successfully for family {$family->family_name} ({$familyCode})!");
     }
-
-    $billingAmount = $family->calculateBillingAmount();
-
-    $subscriptionPlan = $family->subscriptionPlan();
-    if (!$subscriptionPlan) {
-        return redirect()->back()->with('error', 'Subscription plan not found');
-    }
-
-    $billingLog = new BillingLog();
-    $billingLog->family_code = $family->family_code;
-    $billingLog->subscription_plan = $family->subscription;
-    $billingLog->base_amount = $subscriptionPlan->base_amount;
-    $billingLog->additional_multiplier = $subscriptionPlan->additional_multiplier;
-    $billingLog->amount_due = $billingAmount;
-    $billingLog->save();
-
-    $family->status = 'Paid';
-    $family->save();
-
-    return redirect()->back()->with('success', 'Payment recorded successfully and status updated!');
-}
 
     public function insertTeacher()
     {
@@ -119,10 +127,11 @@ class AdminController extends Controller
         foreach ($families as $family) {
             $family->billing_amount = $family->family ? $family->family->calculateBillingAmount() : 0;
         }
+
+        // Get current user's role
+        $userRole = session('userAccess')->access ?? 'admin';
     
-        // return view('families.index', compact('families'));
-        return view('admins.family', compact('families'));
-    
+        return view('families.index', compact('families', 'userRole'));
     }
 
 
@@ -379,7 +388,8 @@ class AdminController extends Controller
             'address' => 'required|string',
             'age' => 'required|string', 
             'username' => 'required|string', 
-            'password' => 'required|string', 
+            'password' => 'required|string',
+            'access_level' => 'required|in:super_admin,admin,principal,teacher', // Updated access levels
         ]);
 
         $existingTeacher = Teacher::where('firstname', $request->firstname)
@@ -430,8 +440,16 @@ class AdminController extends Controller
                 'email' => $request->username,
                 'password' => bcrypt($request->password), 
             ]);
+
+            // Create user access with the selected access level
+            UserAccess::create([
+                'userCode' => $staffCode,
+                'access' => $request->access_level, // Use the selected access level
+                'email' => $request->email,
+                'updated_at' => now(),
+            ]);
             
-            session()->flash('success', 'Teacher added successfully!');
+            session()->flash('success', 'Teacher added successfully with ' . ucfirst($request->access_level) . ' access!');
             return redirect()->route('teacher-list');
         } catch (Exception $e) {
             session()->flash('error', 'An error occurred while adding the teacher.');
@@ -462,7 +480,7 @@ class AdminController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Admin $admin)
+    public function show($id)
     {
         //
     }
@@ -470,7 +488,7 @@ class AdminController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Admin $admin)
+    public function edit($id)
     {
         //
     }
@@ -483,7 +501,7 @@ class AdminController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Admin $admin)
+    public function destroy($id)
     {
         //
     }

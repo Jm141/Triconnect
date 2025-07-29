@@ -35,26 +35,48 @@ class UserController extends Controller
         'password' => 'required|string',
     ]);
 
-    if (Auth::attempt([
-        'email' => $request->email,
-        'password' => $request->password,
-    ], $request->remember)) {
-        // echo "success"; 
-        $user = Auth::user();
+    // First, find the user by email
+    $user = User::where('email', $request->email)->first();
 
-        $userAccess = UserAccess::where('email', $request->email)->first();
+    if (!$user) {
+        return redirect()->route('user')->with('error', 'User not found');
+    }
+
+    // Check password using bcrypt
+    if (!password_verify($request->password, $user->password)) {
+        return redirect()->route('user')->with('error', 'Invalid credentials');
+    }
+
+    // Password is correct, now authenticate the user
+    Auth::login($user, $request->remember);
+
+    // Check if this is the super admin
+    if ($user->userCode === 'Admin=349262938') {
+        // Super admin - redirect to main dashboard
+        return redirect()->route('dashboard');
+    } else {
+        // For regular users, get their access from user_access_links
+        $userAccess = UserAccess::where('userCode', $user->userCode)->first();
 
         if ($userAccess) {
             session(['userAccess' => $userAccess]);
-            return redirect()->route('userDashboard');
+            
+            // Redirect based on user access type
+            if (strpos($userAccess->access, 'teacher') !== false) {
+                return redirect()->route('teacher.dashboard');
+            } elseif (strpos($userAccess->access, 'parent') !== false) {
+                return redirect()->route('parent.dashboard');
+            } elseif (strpos($userAccess->access, 'principal') !== false) {
+                return redirect()->route('principal.dashboard');
+            } else {
+                // Default fallback to userDashboard
+                return redirect()->route('userDashboard');
+            }
         } else {
-            // echo "failed"; 
-            // echo $userAccess->access;
-            return redirect()->route('user')->with('error', 'No access found');
+            // No access found - logout and show error
+            Auth::logout();
+            return redirect()->route('user')->with('error', 'No access found for this user');
         }
-    } else {
-        // Authentication failed
-        return redirect()->route('login')->with('error', 'Invalid credentials');
     }
 }
     
@@ -151,9 +173,13 @@ class UserController extends Controller
     /**
      * Log the user out.
      */
-    public function logout()
+    public function logout(Request $request)
     {
         Auth::logout();
+        
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        
         return redirect()->route('user');
     }
 

@@ -31,6 +31,18 @@ class Family extends Model
     }
     
     /**
+     * Get the family name from the primary parent
+     */
+    public function getFamilyNameAttribute()
+    {
+        $primaryParent = $this->parents()->first();
+        if ($primaryParent) {
+            return $primaryParent->fname . ' ' . $primaryParent->lname;
+        }
+        return 'Unknown Family';
+    }
+    
+    /**
      * Retrieve the subscription plan associated with this family.
      * This assumes that the 'subscription' field in the family table stores
      * the plan name (e.g., "standard", "premium") matching SubscriptionPlan::name.

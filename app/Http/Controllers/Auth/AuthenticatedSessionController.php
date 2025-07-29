@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -24,11 +25,56 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $request->authenticate();
+        // First, find the user by email
+        $user = \App\Models\User::where('email', $request->email)->first();
 
+        if (!$user) {
+            throw ValidationException::withMessages([
+                'email' => __('auth.failed'),
+            ]);
+        }
+
+        // Check password using bcrypt
+        if (!password_verify($request->password, $user->password)) {
+            throw ValidationException::withMessages([
+                'email' => __('auth.failed'),
+            ]);
+        }
+
+        // Password is correct, now authenticate the user
+        Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // Check if this is the super admin
+        if ($user->userCode === 'Admin=349262938') {
+            // Super admin - redirect to main dashboard
+            return redirect()->intended(route('dashboard', absolute: false));
+        } else {
+            // For regular users, get their access from user_access_links
+            $userAccess = \App\Models\UserAccess::where('userCode', $user->userCode)->first();
+
+            if ($userAccess) {
+                session(['userAccess' => $userAccess]);
+                
+                // Redirect based on user access type
+                if (strpos($userAccess->access, 'teacher') !== false) {
+                    return redirect()->intended(route('teacher.dashboard', absolute: false));
+                } elseif (strpos($userAccess->access, 'parent') !== false) {
+                    return redirect()->intended(route('parent.dashboard', absolute: false));
+                } elseif (strpos($userAccess->access, 'principal') !== false) {
+                    return redirect()->intended(route('principal.dashboard', absolute: false));
+                } else {
+                    // Default fallback to userDashboard
+                    return redirect()->intended(route('userDashboard', absolute: false));
+                }
+            } else {
+                // No access found - logout and show error
+                Auth::logout();
+                throw ValidationException::withMessages([
+                    'email' => 'No access found for this user',
+                ]);
+            }
+        }
     }
 
     /**
@@ -42,6 +88,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect()->route('user');
     }
 }
