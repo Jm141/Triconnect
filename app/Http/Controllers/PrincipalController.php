@@ -123,7 +123,7 @@ class PrincipalController extends Controller
             ]);
 
             // Get recipients based on type
-            $recipients = [];
+            $recipients = collect();
             
             if ($validated['recipient_type'] === 'all') {
                 // Get all teachers and parents
@@ -136,8 +136,24 @@ class PrincipalController extends Controller
                 $recipients = UserAccess::where('access', 'parent')->pluck('userCode');
             }
 
-            // Store notification recipients (you might want to create a separate table for this)
-            // For now, we'll just store the count
+            // Create individual notification recipients
+            $recipientRecords = [];
+            foreach ($recipients as $userCode) {
+                $recipientRecords[] = [
+                    'notification_id' => $notification->id,
+                    'recipient_user_code' => $userCode,
+                    'status' => 'unread',
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ];
+            }
+
+            // Insert all recipients in batch
+            if (!empty($recipientRecords)) {
+                \App\Models\NotificationRecipient::insert($recipientRecords);
+            }
+
+            // Update notification with recipient count
             $notification->update([
                 'recipient_count' => $recipients->count()
             ]);

@@ -33,6 +33,30 @@ class Notification extends Model
     }
 
     /**
+     * Get all recipients for this notification
+     */
+    public function recipients()
+    {
+        return $this->hasMany(NotificationRecipient::class);
+    }
+
+    /**
+     * Get unread recipients for this notification
+     */
+    public function unreadRecipients()
+    {
+        return $this->hasMany(NotificationRecipient::class)->unread();
+    }
+
+    /**
+     * Get read recipients for this notification
+     */
+    public function readRecipients()
+    {
+        return $this->hasMany(NotificationRecipient::class)->read();
+    }
+
+    /**
      * Get priority badge class
      */
     public function getPriorityBadgeClass()

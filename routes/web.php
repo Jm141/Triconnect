@@ -53,6 +53,19 @@ Route::get('/attendance/export', [UserTeacherController::class, 'exportAttendanc
 Route::get('/teacher/dashboard', function () {
     return view('teacher.dashboard');
 })->name('teacher.dashboard');
+
+// Notification routes for teachers and parents (moved outside auth middleware)
+Route::prefix('notifications')->name('notifications.')->group(function () {
+    Route::get('/', [App\Http\Controllers\NotificationController::class, 'index'])->name('index');
+    Route::get('/simple-test', [App\Http\Controllers\NotificationController::class, 'simpleTest'])->name('simple-test');
+    Route::get('/debug', [App\Http\Controllers\NotificationController::class, 'debug'])->name('debug');
+    Route::get('/test/create', [App\Http\Controllers\NotificationController::class, 'testNotification'])->name('test-create');
+    Route::get('/unread-count', [App\Http\Controllers\NotificationController::class, 'getUnreadCount'])->name('unread-count');
+    Route::get('/recent', [App\Http\Controllers\NotificationController::class, 'getRecentNotifications'])->name('recent');
+    Route::post('/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+    Route::get('/{id}', [App\Http\Controllers\NotificationController::class, 'show'])->name('show');
+    Route::post('/{id}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('mark-read');
+});
     
 Route::post('/userLogin', [UserController::class, 'login'])->name('userLogin');
 

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Teacher Dashboard - Triconnect</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
@@ -91,6 +92,62 @@
             background: #2980b9;
             transform: scale(1.1);
         }
+
+        /* Notification styles */
+        .notification-dropdown {
+            width: 350px !important;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-dropdown .dropdown-item {
+            padding: 0.75rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .notification-dropdown .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-dropdown .dropdown-item.unread {
+            background-color: #f8f9ff;
+            border-left: 3px solid #007bff;
+        }
+
+        .notification-dropdown .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 0.7rem;
+            min-width: 18px;
+            height: 18px;
+            line-height: 18px;
+            text-align: center;
+            z-index: 1000;
+            display: none;
+            pointer-events: none; /* Allow clicks to pass through to the parent */
+            background-color: #dc3545 !important;
+            color: white !important;
+            border-radius: 50% !important;
+            padding: 2px !important;
+        }
+
+        .nav-item.dropdown {
+            position: relative;
+        }
+
+        .nav-link.dropdown-toggle {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .dropdown-menu.show {
+            display: block !important;
+        }
     </style>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -110,6 +167,28 @@
                 </a>
                 
                 <ul class="navbar-nav ml-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="notificationDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fa fa-bell"></i>
+                            <span class="badge badge-danger notification-badge" id="notificationBadge" style="display: none;">0</span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right notification-dropdown" aria-labelledby="notificationDropdown" style="width: 350px; max-height: 400px; overflow-y: auto;">
+                            <div class="dropdown-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">Notifications</h6>
+                                <button class="btn btn-sm btn-link text-decoration-none" onclick="markAllAsRead()">Mark all read</button>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <div id="notificationList">
+                                <div class="text-center p-3">
+                                    <i class="fa fa-spinner fa-spin"></i> Loading...
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item text-center" href="{{ route('notifications.index') }}">
+                                View All Notifications
+                            </a>
+                        </div>
+                    </li>
                     <li class="nav-item">
                         <form method="POST" action="{{ route('userLogout') }}" style="display: inline;">
                             @csrf
@@ -280,15 +359,35 @@
                                                 <i class="fa fa-qrcode"></i> Generate QR Code
                                             </a>
                                         </div>
-                                        <!-- <div class="col-md-3">
-                                            <a href="{{ route('qr.advanced') }}" class="btn btn-info btn-block">
-                                                <i class="fa fa-cogs"></i> Advanced QR Options
-                                            </a>
+                                        <!-- <div class="col-md-3 mt-2">
+                                            <button onclick="createTestNotification()" class="btn btn-danger btn-block">
+                                                <i class="fa fa-bell"></i> Test Notification
+                                            </button>
                                         </div>
-                                        <div class="col-md-3">
-                                            <a href="{{ route('qr.quick') }}" class="btn btn-danger btn-block">
-                                                <i class="fa fa-bolt"></i> Quick QR (15min)
-                                            </a>
+                                        <div class="col-md-3 mt-2">
+                                            <button onclick="debugSession()" class="btn btn-info btn-block">
+                                                <i class="fa fa-bug"></i> Debug Session
+                                            </button>
+                                        </div>-->
+                                        <!-- <div class="col-md-3 mt-2">
+                                            <button onclick="simpleTest()" class="btn btn-secondary btn-block">
+                                                <i class="fa fa-check"></i> Simple Test
+                                            </button>
+                                        </div>
+                                        <div class="col-md-3 mt-2">
+                                            <button onclick="testNotificationDetail()" class="btn btn-warning btn-block">
+                                                <i class="fa fa-eye"></i> Test Detail Page
+                                            </button>
+                                        </div>
+                                        <div class="col-md-3 mt-2">
+                                            <button onclick="testDropdown()" class="btn btn-info btn-block">
+                                                <i class="fa fa-list"></i> Test Dropdown
+                                            </button>
+                                        </div>
+                                        <div class="col-md-3 mt-2">
+                                            <button onclick="testBadge()" class="btn btn-success btn-block">
+                                                <i class="fa fa-bell"></i> Test Badge
+                                            </button>
                                         </div> -->
                                     </div>
                                 </div>
@@ -363,6 +462,7 @@
     @endif
 
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/js/adminlte.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         // Sidebar toggle functionality
         document.addEventListener('DOMContentLoaded', function() {
@@ -397,7 +497,314 @@
                     }
                 });
             });
+
+            // Initialize notifications
+            console.log('Initializing notifications...');
+            const badge = document.getElementById('notificationBadge');
+            console.log('Badge element found:', badge);
+            if (badge) {
+                console.log('Badge initial display:', badge.style.display);
+                console.log('Badge initial text:', badge.textContent);
+            }
+            
+            // Initialize dropdown functionality
+            const notificationDropdown = document.getElementById('notificationDropdown');
+            console.log('Notification dropdown element found:', notificationDropdown);
+            
+            if (notificationDropdown) {
+                notificationDropdown.addEventListener('click', function(e) {
+                    console.log('Notification dropdown clicked');
+                    e.preventDefault();
+                    
+                    // Manually toggle dropdown if Bootstrap doesn't work
+                    const dropdownMenu = this.nextElementSibling;
+                    if (dropdownMenu && dropdownMenu.classList.contains('dropdown-menu')) {
+                        dropdownMenu.classList.toggle('show');
+                        console.log('Dropdown menu toggled manually');
+                    }
+                });
+                
+                // Test dropdown functionality
+                console.log('Testing dropdown functionality...');
+                if (typeof $ !== 'undefined') {
+                    console.log('jQuery is available');
+                    $(notificationDropdown).dropdown();
+                } else {
+                    console.log('jQuery is not available, using native Bootstrap');
+                }
+            }
+            
+            loadNotifications();
+            loadUnreadCount();
+
+            // Refresh notifications every 30 seconds
+            setInterval(function() {
+                loadNotifications();
+                loadUnreadCount();
+            }, 30000);
         });
+
+        // Notification functions
+        function loadNotifications() {
+            console.log('Loading notifications...');
+            fetch('{{ route("notifications.recent") }}')
+                .then(response => {
+                    console.log('Notifications response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Notifications data:', data);
+                    const notificationList = document.getElementById('notificationList');
+                    console.log('Notification list element:', notificationList);
+                    
+                    if (data.length === 0) {
+                        notificationList.innerHTML = '<div class="text-center p-3 text-muted">No notifications</div>';
+                        return;
+                    }
+
+                    let html = '';
+                    data.forEach(notification => {
+                        const isUnread = notification.status === 'unread';
+                        const priorityClass = getPriorityBadgeClass(notification.notification.priority);
+                        const timeAgo = getTimeAgo(notification.created_at);
+                        
+                        html += `
+                            <a class="dropdown-item ${isUnread ? 'unread' : ''}" href="/notifications/${notification.id}" onclick="markAsRead(${notification.id})">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <h6 class="mb-0 font-weight-bold">${notification.notification.title}</h6>
+                                            <span class="badge ${priorityClass} ml-2">${notification.notification.priority.toUpperCase()}</span>
+                                        </div>
+                                        <p class="mb-1 text-muted small">${notification.notification.message.substring(0, 100)}${notification.notification.message.length > 100 ? '...' : ''}</p>
+                                        <small class="text-muted">${timeAgo}</small>
+                                    </div>
+                                    ${isUnread ? '<div class="ml-2"><span class="badge badge-primary">NEW</span></div>' : ''}
+                                </div>
+                            </a>
+                        `;
+                    });
+                    
+                    notificationList.innerHTML = html;
+                    console.log('Notifications loaded successfully');
+                })
+                .catch(error => {
+                    console.error('Error loading notifications:', error);
+                });
+        }
+
+        function loadUnreadCount() {
+            console.log('Loading unread count...');
+            fetch('{{ route("notifications.unread-count") }}')
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Unread count data:', data);
+                    const badge = document.getElementById('notificationBadge');
+                    console.log('Badge element:', badge);
+                    console.log('Badge current display:', badge ? badge.style.display : 'element not found');
+                    console.log('Badge current text:', badge ? badge.textContent : 'element not found');
+                    
+                    if (badge) {
+                        if (data.count > 0) {
+                            badge.textContent = data.count;
+                            badge.style.display = 'inline';
+                            console.log('Badge should be visible with count:', data.count);
+                            console.log('Badge display after setting:', badge.style.display);
+                            console.log('Badge text after setting:', badge.textContent);
+                        } else {
+                            badge.style.display = 'none';
+                            console.log('Badge should be hidden');
+                        }
+                    } else {
+                        console.error('Badge element not found!');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading unread count:', error);
+                });
+        }
+
+        function markAsRead(notificationId) {
+            fetch(`{{ route('notifications.mark-read', '') }}/${notificationId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadUnreadCount();
+                }
+            })
+            .catch(error => {
+                console.error('Error marking notification as read:', error);
+            });
+        }
+
+        function markAllAsRead() {
+            fetch('{{ route("notifications.mark-all-read") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadNotifications();
+                    loadUnreadCount();
+                }
+            })
+            .catch(error => {
+                console.error('Error marking all notifications as read:', error);
+            });
+        }
+
+        function getPriorityBadgeClass(priority) {
+            switch (priority) {
+                case 'urgent': return 'badge-danger';
+                case 'high': return 'badge-warning';
+                case 'medium': return 'badge-info';
+                case 'low': return 'badge-secondary';
+                default: return 'badge-secondary';
+            }
+        }
+
+        function getTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) return 'Just now';
+            if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + 'm ago';
+            if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + 'h ago';
+            return Math.floor(diffInSeconds / 86400) + 'd ago';
+        }
+
+        function createTestNotification() {
+            fetch('{{ route("notifications.test-create") }}', {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Test notification created successfully!');
+                    loadNotifications(); // Refresh notifications
+                    loadUnreadCount(); // Refresh unread count
+                    
+                    // Force show badge for testing
+                    setTimeout(() => {
+                        const badge = document.getElementById('notificationBadge');
+                        if (badge) {
+                            badge.style.display = 'inline';
+                            badge.textContent = '1';
+                            console.log('Badge forced to show for testing');
+                        }
+                    }, 1000);
+                } else {
+                    alert('Error creating test notification: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error creating test notification:', error);
+                alert('Error creating test notification: ' + error.message);
+            });
+        }
+
+        function debugSession() {
+            fetch('{{ route("notifications.debug") }}', {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Debug data:', data);
+                alert('Debug data logged to console. Check browser console for details.');
+            })
+            .catch(error => {
+                console.error('Error debugging session:', error);
+                alert('Error debugging session: ' + error.message);
+            });
+        }
+
+        function simpleTest() {
+            fetch('{{ route("notifications.simple-test") }}', {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Simple test response:', data);
+                alert('Simple test successful! Check console for details.');
+            })
+            .catch(error => {
+                console.error('Error in simple test:', error);
+                alert('Error in simple test: ' + error.message);
+            });
+        }
+
+        function testNotificationDetail() {
+            // Get the first notification from the recent notifications
+            fetch('{{ route("notifications.recent") }}')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        const firstNotification = data[0];
+                        console.log('Testing notification detail for ID:', firstNotification.id);
+                        window.location.href = `/notifications/${firstNotification.id}`;
+                    } else {
+                        alert('No notifications available to test. Create a test notification first.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error getting notifications for testing:', error);
+                    alert('Error getting notifications for testing.');
+                });
+        }
+
+        function testDropdown() {
+            console.log('Testing dropdown functionality...');
+            const notificationDropdown = document.getElementById('notificationDropdown');
+            if (notificationDropdown) {
+                if (typeof $ !== 'undefined') {
+                    console.log('jQuery is available, testing dropdown...');
+                    $(notificationDropdown).dropdown();
+                } else {
+                    console.log('jQuery is not available, using native Bootstrap dropdown...');
+                    // Native Bootstrap dropdown logic (if needed, but not directly in this file)
+                }
+            } else {
+                console.log('Notification dropdown element not found.');
+            }
+        }
+
+        function testBadge() {
+            console.log('Testing badge functionality...');
+            const badge = document.getElementById('notificationBadge');
+            if (badge) {
+                badge.style.display = 'inline';
+                console.log('Badge should be visible.');
+                console.log('Badge display after setting:', badge.style.display);
+            } else {
+                console.error('Badge element not found!');
+            }
+        }
     </script>
 </body>
 </html> 

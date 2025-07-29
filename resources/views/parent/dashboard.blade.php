@@ -61,6 +61,42 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
+        /* Notification styles */
+        .notification-dropdown {
+            width: 350px !important;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-dropdown .dropdown-item {
+            padding: 0.75rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .notification-dropdown .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-dropdown .dropdown-item.unread {
+            background-color: #f8f9ff;
+            border-left: 3px solid #007bff;
+        }
+
+        .notification-dropdown .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 0.7rem;
+            min-width: 18px;
+            height: 18px;
+            line-height: 18px;
+            text-align: center;
+        }
+
         .sidebar {
             width: 280px;
             height: 100vh;
@@ -325,10 +361,27 @@
                 </a>
                 
                 <ul class="navbar-nav ml-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" title="Notifications">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="notificationDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="fa fa-bell"></i>
+                            <span class="badge badge-danger notification-badge" id="notificationBadge" style="display: none;">0</span>
                         </a>
+                        <div class="dropdown-menu dropdown-menu-right notification-dropdown" aria-labelledby="notificationDropdown" style="width: 350px; max-height: 400px; overflow-y: auto;">
+                            <div class="dropdown-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">Notifications</h6>
+                                <button class="btn btn-sm btn-link text-decoration-none" onclick="markAllAsRead()">Mark all read</button>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <div id="notificationList">
+                                <div class="text-center p-3">
+                                    <i class="fa fa-spinner fa-spin"></i> Loading...
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item text-center" href="{{ route('notifications.index') }}">
+                                View All Notifications
+                            </a>
+                        </div>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#" title="Settings">
@@ -645,7 +698,136 @@
         // Load addresses after page loads
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(loadAddresses, 1000); // Start loading addresses after 1 second
+            
+            // Initialize notifications
+            loadNotifications();
+            loadUnreadCount();
+
+            // Refresh notifications every 30 seconds
+            setInterval(function() {
+                loadNotifications();
+                loadUnreadCount();
+            }, 30000);
         });
+
+        // Notification functions
+        function loadNotifications() {
+            fetch('{{ route("notifications.recent") }}')
+                .then(response => response.json())
+                .then(data => {
+                    const notificationList = document.getElementById('notificationList');
+                    
+                    if (data.length === 0) {
+                        notificationList.innerHTML = '<div class="text-center p-3 text-muted">No notifications</div>';
+                        return;
+                    }
+
+                    let html = '';
+                    data.forEach(notification => {
+                        const isUnread = notification.status === 'unread';
+                        const priorityClass = getPriorityBadgeClass(notification.notification.priority);
+                        const timeAgo = getTimeAgo(notification.created_at);
+                        
+                        html += `
+                            <a class="dropdown-item ${isUnread ? 'unread' : ''}" href="{{ route('notifications.show', '') }}/${notification.id}" onclick="markAsRead(${notification.id})">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <h6 class="mb-0 font-weight-bold">${notification.notification.title}</h6>
+                                            <span class="badge ${priorityClass} ml-2">${notification.notification.priority.toUpperCase()}</span>
+                                        </div>
+                                        <p class="mb-1 text-muted small">${notification.notification.message.substring(0, 100)}${notification.notification.message.length > 100 ? '...' : ''}</p>
+                                        <small class="text-muted">${timeAgo}</small>
+                                    </div>
+                                    ${isUnread ? '<div class="ml-2"><span class="badge badge-primary">NEW</span></div>' : ''}
+                                </div>
+                            </a>
+                        `;
+                    });
+                    
+                    notificationList.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error loading notifications:', error);
+                });
+        }
+
+        function loadUnreadCount() {
+            fetch('{{ route("notifications.unread-count") }}')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('notificationBadge');
+                    if (data.count > 0) {
+                        badge.textContent = data.count;
+                        badge.style.display = 'inline';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading unread count:', error);
+                });
+        }
+
+        function markAsRead(notificationId) {
+            fetch(`{{ route('notifications.mark-read', '') }}/${notificationId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadUnreadCount();
+                }
+            })
+            .catch(error => {
+                console.error('Error marking notification as read:', error);
+            });
+        }
+
+        function markAllAsRead() {
+            fetch('{{ route("notifications.mark-all-read") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadNotifications();
+                    loadUnreadCount();
+                }
+            })
+            .catch(error => {
+                console.error('Error marking all notifications as read:', error);
+            });
+        }
+
+        function getPriorityBadgeClass(priority) {
+            switch (priority) {
+                case 'urgent': return 'badge-danger';
+                case 'high': return 'badge-warning';
+                case 'medium': return 'badge-info';
+                case 'low': return 'badge-secondary';
+                default: return 'badge-secondary';
+            }
+        }
+
+        function getTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) return 'Just now';
+            if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + 'm ago';
+            if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + 'h ago';
+            return Math.floor(diffInSeconds / 86400) + 'd ago';
+        }
     </script>
 </body>
 </html> 
