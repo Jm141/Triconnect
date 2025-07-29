@@ -376,7 +376,7 @@
         <!-- Navbar -->
         <nav class="navbar navbar-expand navbar-dark">
             <div class="container-fluid">
-                <a href="/teacher/dashboard" class="navbar-brand">
+                <a href="{{ route('attendance.dashboard') }}" class="navbar-brand">
                     <img src="/images/Triconnect.png" alt="Triconnect Logo" onerror="this.onerror=null; this.src='https://via.placeholder.com/40x40/3498db/ffffff?text=T'; console.log('Logo image failed to load');" />
                     <span>Triconnect</span>
                 </a>
@@ -423,7 +423,7 @@
             <nav class="sidebar-nav">
                 <ul class="nav nav-pills nav-sidebar flex-column">
                     <li class="nav-item">
-                        <a href="/teacher/dashboard" class="nav-link">
+                        <a href="{{ route('attendance.dashboard') }}" class="nav-link">
                             <i class="nav-icon fa fa-dashboard"></i>
                             <span>Dashboard</span>
                         </a>
@@ -517,6 +517,11 @@
                             </select>
                         </div>
                         <div class="col-md-3">
+                            <label for="student_name" class="form-label">Student Name</label>
+                            <input type="text" class="form-control" id="student_name" name="student_name" 
+                                   value="{{ request('student_name') }}" placeholder="e.g., julio.martinez">
+                        </div>
+                        <div class="col-md-3">
                             <label class="form-label">&nbsp;</label>
                             <div>
                                 <button type="submit" class="btn btn-primary">
@@ -555,8 +560,16 @@
                                             <tr>
                                                 <td>
                                                     <strong>{{ $attendance->userCode }}</strong>
-                                                    @if($attendance->student)
-                                                        <br><small class="text-muted">{{ $attendance->student->firstname }} {{ $attendance->student->lastname }}</small>
+                                                    @if($attendance->name)
+                                                        <br><small class="text-muted">
+                                                            @php
+                                                                $nameParts = explode('.', $attendance->name);
+                                                                $displayName = count($nameParts) >= 2 
+                                                                    ? ucfirst($nameParts[0]) . ' ' . ucfirst($nameParts[1])
+                                                                    : ucfirst($attendance->name);
+                                                            @endphp
+                                                            {{ $displayName }}
+                                                        </small>
                                                     @endif
                                                 </td>
                                                 <td>

@@ -420,7 +420,19 @@
                                                 <tbody>
                                             @foreach($currentClassAttendance as $attendance)
                                                         <tr>
-                                                <td>{{ \App\Models\UserAccess::where('userCode', $attendance->userCode)->value('name') ?? 'Unknown' }}</td>
+                                                <td>
+                                                    @if($attendance->name)
+                                                        @php
+                                                            $nameParts = explode('.', $attendance->name);
+                                                            $displayName = count($nameParts) >= 2 
+                                                                ? ucfirst($nameParts[0]) . ' ' . ucfirst($nameParts[1])
+                                                                : ucfirst($attendance->name);
+                                                        @endphp
+                                                        {{ $displayName }}
+                                                    @else
+                                                        Unknown
+                                                    @endif
+                                                </td>
                                                 <td>{{ $attendance->userCode }}</td>
                                                 <td>{{ $attendance->time_scan->format('H:i:s') }}</td>
                                                 <td><span class="status-present">Present</span></td>

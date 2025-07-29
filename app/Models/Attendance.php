@@ -13,6 +13,7 @@ class Attendance extends Model
 
     protected $fillable = [
         'userCode',
+        'name',
         'roomCode',
         'role',
         'status',
@@ -48,6 +49,12 @@ class Attendance extends Model
         return $this->belongsTo(Subject::class, 'subject_name', 'subject_name');
     }
 
+    // Relationship with Student
+    public function student()
+    {
+        return $this->belongsTo(Student::class, 'userCode', 'family_code');
+    }
+
     // Scope for QR scan attendance
     public function scopeQrScan($query)
     {
@@ -64,5 +71,27 @@ class Attendance extends Model
     public function scopeForSubject($query, $subjectName)
     {
         return $query->where('subject_name', $subjectName);
+    }
+
+    // Scope for searching by student name (firstname.lastname format)
+    public function scopeSearchByStudentName($query, $studentName)
+    {
+        return $query->where('name', 'like', '%' . strtolower($studentName) . '%');
+    }
+
+    // Method to get student info from student table
+    public function getStudentInfo()
+    {
+        $student = Student::where('family_code', $this->userCode)->first();
+        if ($student) {
+            return [
+                'firstname' => $student->firstname,
+                'lastname' => $student->lastname,
+                'fullname' => $student->firstname . ' ' . $student->lastname,
+                'grade_level' => $student->grade_level,
+                'email' => $student->email
+            ];
+        }
+        return null;
     }
 }

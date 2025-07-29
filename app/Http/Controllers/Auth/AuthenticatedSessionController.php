@@ -54,6 +54,8 @@ class AuthenticatedSessionController extends Controller
             $userAccess = \App\Models\UserAccess::where('userCode', $user->userCode)->first();
 
             if ($userAccess) {
+                // Add the user's name to the userAccess object for easy access in views
+                $userAccess->name = $user->name;
                 session(['userAccess' => $userAccess]);
                 
                 // Redirect based on user access type

@@ -34,7 +34,7 @@ class UserTeacherController extends Controller
         $currentDay = $currentTime->format('l'); // Monday, Tuesday, etc.
 
         // Get current active schedule for the teacher
-        $currentSchedule = Schedule::where('teacher_staff_code', $userAccess->staff_code ?? '')
+        $currentSchedule = Schedule::where('teacher_staff_code', $userAccess->userCode ?? '')
             ->where('status', 'active')
             ->whereJsonContains('day_of_week', $currentDay)
             ->where('start_time', '<=', $currentTime->format('H:i:s'))
@@ -52,14 +52,14 @@ class UserTeacherController extends Controller
         }
 
         // Get today's schedules for the teacher
-        $todaysSchedules = Schedule::where('teacher_staff_code', $userAccess->staff_code ?? '')
+        $todaysSchedules = Schedule::where('teacher_staff_code', $userAccess->userCode ?? '')
             ->where('status', 'active')
             ->whereJsonContains('day_of_week', $currentDay)
             ->orderBy('start_time')
             ->get();
 
         // Get historical attendance data (last 30 days)
-        $historicalAttendance = Attendance::where('teacher_staff_code', $userAccess->staff_code ?? '')
+        $historicalAttendance = Attendance::where('teacher_staff_code', $userAccess->userCode ?? '')
             ->where('attendance_type', 'qr_scan')
             ->where('time_scan', '>=', $currentTime->subDays(30))
             ->with(['schedule'])
@@ -159,9 +159,18 @@ class UserTeacherController extends Controller
             ->where('status', 'logged_in')
             ->get()
             ->map(function($record) {
+                // Format the student name for display
+                $displayName = 'Unknown';
+                if ($record->name) {
+                    $nameParts = explode('.', $record->name);
+                    $displayName = count($nameParts) >= 2 
+                        ? ucfirst($nameParts[0]) . ' ' . ucfirst($nameParts[1])
+                        : ucfirst($record->name);
+                }
+                
                 return [
                     'userCode' => $record->userCode,
-                    'student_name' => UserAccess::where('userCode', $record->userCode)->value('name'),
+                    'student_name' => $displayName,
                     'time_scan' => $record->time_scan,
                     'status' => $record->status
                 ];
@@ -218,12 +227,21 @@ class UserTeacherController extends Controller
             ]);
 
             foreach ($attendance as $record) {
+                // Format the student name for export
+                $displayName = 'Unknown';
+                if ($record->name) {
+                    $nameParts = explode('.', $record->name);
+                    $displayName = count($nameParts) >= 2 
+                        ? ucfirst($nameParts[0]) . ' ' . ucfirst($nameParts[1])
+                        : ucfirst($record->name);
+                }
+                
                 fputcsv($file, [
                     $record->time_scan->format('Y-m-d'),
                     $record->subject_name,
                     $record->roomCode,
                     $record->userCode,
-                    UserAccess::where('userCode', $record->userCode)->value('name') ?? 'Unknown',
+                    $displayName,
                     $record->time_scan->format('H:i:s'),
                     $record->status
                 ]);

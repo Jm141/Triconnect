@@ -20,7 +20,7 @@ class QrCodeController extends Controller
     public function generateQr(Request $request)
     {
         $user = Auth::user();
-        $teacherStaffCode = session('userAccess')->staff_code;
+        $teacherStaffCode = session('userAccess')->userCode;
         
         // Get current time and day
         $now = Carbon::now();
@@ -72,7 +72,7 @@ class QrCodeController extends Controller
      */
     public function generateAdvancedQr(Request $request)
     {
-        $teacherStaffCode = session('userAccess')->staff_code;
+        $teacherStaffCode = session('userAccess')->userCode;
         $teacher = Teacher::where('staff_code', $teacherStaffCode)->first();
         
         // Get all teacher's schedules
@@ -105,7 +105,7 @@ class QrCodeController extends Controller
             'expiry_minutes' => 'nullable|integer|min:1|max:1440'
         ]);
 
-        $teacherStaffCode = session('userAccess')->staff_code;
+        $teacherStaffCode = session('userAccess')->userCode;
         $qrSize = $request->qr_size ?? 300;
         $expiryMinutes = $request->expiry_minutes ?? 60;
 
@@ -185,7 +185,7 @@ class QrCodeController extends Controller
      */
     public function generateQuickQr()
     {
-        $teacherStaffCode = session('userAccess')->staff_code;
+        $teacherStaffCode = session('userAccess')->userCode;
         $now = Carbon::now();
         $currentDay = $now->format('l');
         $currentTime = $now->format('H:i:s');
@@ -233,7 +233,7 @@ class QrCodeController extends Controller
         $schedule = Schedule::with(['room', 'subject', 'teacher'])->findOrFail($scheduleId);
         
         // Check if teacher owns this schedule
-        if ($schedule->teacher_staff_code !== session('userAccess')->staff_code) {
+        if ($schedule->teacher_staff_code !== session('userAccess')->userCode) {
             return redirect()->back()->with('error', 'You can only generate QR codes for your own schedules.');
         }
         
@@ -391,6 +391,10 @@ class QrCodeController extends Controller
             // Get current user
             $user = Auth::user();
             
+            // Get student name from student table using userCode (family_code)
+            $student = \App\Models\Student::where('family_code', $user->userCode)->first();
+            $studentName = $student ? strtolower($student->firstname . '.' . $student->lastname) : $user->name;
+            
             // Check if already scanned today
             $existingAttendance = Attendance::where('userCode', $user->userCode)
                 ->where('schedule_id', $schedule->id)
@@ -404,6 +408,7 @@ class QrCodeController extends Controller
             // Create attendance record
             $attendance = Attendance::create([
                 'userCode' => $user->userCode,
+                'name' => $studentName,
                 'roomCode' => $schedule->room_code,
                 'role' => 'student',
                 'status' => 'logged_in',
@@ -437,9 +442,11 @@ class QrCodeController extends Controller
      */
     public function attendanceHistory(Request $request)
     {
-        $teacherStaffCode = session('userAccess')->staff_code;
+        // Get teacher staff code from session - use userCode since that's the staff_code
+        $userAccess = session('userAccess');
+        $teacherStaffCode = $userAccess->userCode;
         
-        $query = Attendance::with(['schedule', 'subject', 'teacher'])
+        $query = Attendance::with(['schedule', 'student'])
             ->where('teacher_staff_code', $teacherStaffCode)
             ->where('attendance_type', 'qr_scan');
         
@@ -457,8 +464,22 @@ class QrCodeController extends Controller
             $query->where('subject_name', $request->subject);
         }
         
+        // Filter by student name
+        if ($request->has('student_name') && $request->student_name) {
+            $query->searchByStudentName($request->student_name);
+        }
+        
         $attendances = $query->orderBy('time_scan', 'desc')->paginate(20);
-        $subjects = collect([]); // Temporary fix - empty collection
+        
+        // Get unique subjects for the filter dropdown
+        $subjects = Attendance::where('teacher_staff_code', $teacherStaffCode)
+            ->where('attendance_type', 'qr_scan')
+            ->whereNotNull('subject_name')
+            ->distinct()
+            ->pluck('subject_name')
+            ->map(function($subjectName) {
+                return (object)['name' => $subjectName];
+            });
         
         return view('qr.history', compact('attendances', 'subjects'));
     }
