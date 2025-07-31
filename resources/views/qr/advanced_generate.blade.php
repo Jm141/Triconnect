@@ -16,6 +16,7 @@
         .qr-option-card.selected {
             border: 2px solid #007bff;
             background-color: #f8f9ff;
+            
         }
         .custom-form {
             display: none;
