@@ -26,9 +26,15 @@ class AdminController extends Controller
 
     public function billing()
     {
-        $billingLogs = BillingLog::with('family','parents')->get();
+        $billingLogs = BillingLog::with(['family', 'family.parents', 'family.students', 'subscriptionPlan'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $totalBilling = $billingLogs->sum('amount_due');
+        $pendingBilling = $billingLogs->where('status', 'pending')->sum('amount_due');
+        $paidBilling = $billingLogs->where('status', 'paid')->sum('amount_due');
     
-        return view('admin.billinglog', compact('billingLogs'));
+        return view('admins.billinglog', compact('billingLogs', 'totalBilling', 'pendingBilling', 'paidBilling'));
     }
     public function studentList(Request $request)
     {
@@ -45,7 +51,7 @@ class AdminController extends Controller
     })->get();
         $students = Student::with(['parents','family'])->get();
     // return view('students.index', compact('students'));
-        return view('students.index', compact('students'));
+        return view('admins.student', compact('students'));
     }
 
     public function subscription()
@@ -131,7 +137,7 @@ class AdminController extends Controller
         // Get current user's role
         $userRole = session('userAccess')->access ?? 'admin';
     
-        return view('families.index', compact('families', 'userRole'));
+        return view('admins.family', compact('families', 'userRole'));
     }
 
 

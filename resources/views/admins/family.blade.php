@@ -60,7 +60,7 @@
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                         <li class="nav-item">
-                            <a href="/teacher-list" class="nav-link">
+                            <a href="{{ route('teacher-list') }}" class="nav-link">
                                 <i class="nav-icon fa fa-users"></i>
                                 <p>Teacher List</p>
                             </a>
@@ -72,27 +72,27 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/roomList" class="nav-link">
+                            <a href="{{ route('roomList') }}" class="nav-link">
                                 <i class="nav-icon fa fa-building"></i>
                                 <p>Room List</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/family-list" class="nav-link">
+                            <a href="{{ route('family-list') }}" class="nav-link">
                                 <i class="nav-icon fa fa-home"></i>
                                 <p>Family List</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/student-list" class="nav-link">
+                            <a href="{{ route('student-list') }}" class="nav-link">
                                 <i class="nav-icon fa fa-graduation-cap"></i>
                                 <p>Student List</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/subscription" class="nav-link">
-                                <i class="nav-icon fa fa-credit-card"></i>
-                                <p>Subscription Plans</p>
+                            <a href="{{ route('geofence') }}" class="nav-link">
+                                <i class="nav-icon fa fa-map-marker-alt"></i>
+                                <p>Geofence</p>
                             </a>
                         </li>
                         <li class="nav-item">
@@ -112,7 +112,7 @@
                     
 
                     <div class="mt-3 text-center">
-                        <a href="addFamily" class="btn btn-primary">Add Family</a>
+                        <a href="{{ route('addFamily') }}" class="btn btn-primary">Add Family</a>
                     </div>
                     
                     @if (session('success'))
@@ -172,21 +172,37 @@
                                                 <td>
                                                     @if($family->family)
                                                         <strong>₱{{ number_format($family->billing_amount, 2) }}</strong>
+                                                        <br>
+                                                        <small class="text-muted">
+                                                            @if($family->family->status === 'Paid')
+                                                                <span class="badge badge-success">Paid</span>
+                                                            @else
+                                                                <span class="badge badge-warning">Pending</span>
+                                                            @endif
+                                                        </small>
                                                     @else
                                                         <span class="text-muted">N/A</span>
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    @if($family->status != 'Subscribe')
-                                                        <form action="{{ route('admin.recordPayment', $family->family_code) }}" method="POST" style="display: inline;">
-                                                            @csrf
-                                                            <button type="submit" class="btn btn-primary btn-sm">
-                                                                <i class="fas fa-check"></i> Mark as Paid
-                                                            </button>
-                                                        </form>
-                                                    @else
-                                                        <span class="badge badge-success">Paid</span>
-                                                    @endif
+                                                    <div class="btn-group" role="group">
+                                                        @if($family->family && $family->family->status !== 'Paid')
+                                                            <form action="{{ route('admin.recordPayment', $family->family_code) }}" method="POST" style="display: inline;">
+                                                                @csrf
+                                                                <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Mark this family as paid?')">
+                                                                    <i class="fas fa-check"></i> Mark as Paid
+                                                                </button>
+                                                            </form>
+                                                        @elseif($family->family && $family->family->status === 'Paid')
+                                                            <span class="badge badge-success">Already Paid</span>
+                                                        @else
+                                                            <span class="text-muted">No billing</span>
+                                                        @endif
+                                                        
+                                                        <a href="{{ route('billing.index') }}" class="btn btn-info btn-sm ml-1">
+                                                            <i class="fas fa-eye"></i> View Details
+                                                        </a>
+                                                    </div>
                                                 </td>               
                                             </tr>
                                         @endforeach

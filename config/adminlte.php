@@ -86,7 +86,7 @@ return [
     'auth_logo' => [
         'enabled' => true,
         'img' => [
-            'path' => 'images/triconnect.png',
+            'path' => 'images/Triconnect.png',
             'alt' => 'Triconnect Logo',
             'class' => 'bg-white p-2 rounded-circle',
             'width' => 100,
@@ -113,7 +113,7 @@ return [
         'enabled' => true,
         'mode' => 'fullscreen',
         'img' => [
-            'path' => 'images/triconnect.png',
+            'path' => 'images/Triconnect.png',
             'alt' => 'Triconnect Preloader Image',
             'effect' => 'animation__shake',
             'width' => 100,

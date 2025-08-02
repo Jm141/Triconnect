@@ -7,6 +7,7 @@
     <title>Teacher Dashboard - Triconnect</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -358,6 +359,16 @@
                                             <a href="{{ route('qr.generate') }}" class="btn btn-warning btn-block">
                                                 <i class="fa fa-qrcode"></i> Generate QR Code
                                             </a>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <a href="{{ route('attendance.dashboard') }}" class="btn btn-info btn-block">
+                                                <i class="fa fa-users"></i> Attendance Dashboard
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <button onclick="exportAttendanceCSV()" class="btn btn-success btn-block">
+                                                <i class="fa fa-download"></i> Download Attendance CSV
+                                            </button>
                                         </div>
                                         <!-- <div class="col-md-3 mt-2">
                                             <button onclick="createTestNotification()" class="btn btn-danger btn-block">
@@ -804,6 +815,49 @@
             } else {
                 console.error('Badge element not found!');
             }
+        }
+
+        function exportAttendanceCSV() {
+            Swal.fire({
+                title: 'Export Attendance Data?',
+                text: "This will download all your attendance records as a CSV file.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, download CSV!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading state
+                    Swal.fire({
+                        title: 'Preparing CSV...',
+                        text: 'Please wait while we generate your attendance report.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    // Download the CSV
+                    const url = '{{ route("attendance.export-csv") }}';
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'attendance_export.csv';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    // Show success message
+                    setTimeout(() => {
+                        Swal.fire({
+                            title: 'Download Complete!',
+                            text: 'Your attendance CSV file has been downloaded.',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        });
+                    }, 1000);
+                }
+            });
         }
     </script>
 </body>

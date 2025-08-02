@@ -174,39 +174,33 @@
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                         <li class="nav-item">
-                            <a href="/family-list" class="nav-link text-triconnect-accent hover:bg-triconnect-light">
+                            <a href="{{ route('family-list') }}" class="nav-link text-triconnect-accent hover:bg-triconnect-light">
                                 <i class="nav-icon fa fa-home"></i>
                                 <p>Family List</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/student-list" class="nav-link text-triconnect-accent hover:bg-triconnect-light">
+                            <a href="{{ route('student-list') }}" class="nav-link text-triconnect-accent hover:bg-triconnect-light">
                                 <i class="nav-icon fa fa-graduation-cap"></i>
                                 <p>Student List</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/teacher-list" class="nav-link text-triconnect-accent hover:bg-triconnect-light">
+                            <a href="{{ route('teacher-list') }}" class="nav-link text-triconnect-accent hover:bg-triconnect-light">
                                 <i class="nav-icon fa fa-users"></i>
                                 <p>Teacher List</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/roomList" class="nav-link text-triconnect-accent hover:bg-triconnect-light">
+                            <a href="{{ route('roomList') }}" class="nav-link text-triconnect-accent hover:bg-triconnect-light">
                                 <i class="nav-icon fa fa-building"></i>
                                 <p>Room</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/geofence" class="nav-link text-triconnect-accent hover:bg-triconnect-light">
+                            <a href="{{ route('geofence') }}" class="nav-link text-triconnect-accent hover:bg-triconnect-light">
                                 <i class="nav-icon fa fa-map-marker-alt"></i>
                                 <p>Geofence</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/subscription" class="nav-link text-triconnect-accent hover:bg-triconnect-light">
-                                <i class="nav-icon fa fa-credit-card"></i>
-                                <p>Subscription Plans</p>
                             </a>
                         </li>
                         <li class="nav-item">
@@ -237,7 +231,6 @@
                                         <li><strong>Teacher List:</strong> Manage teacher information</li>
                                         <li><strong>Room:</strong> Manage room assignments and QR codes</li>
                                         <li><strong>Geofence:</strong> Set up and manage geofencing areas</li>
-                                        <li><strong>Subscription Plans:</strong> Manage subscription plans and pricing</li>
                                         <li><strong>Billing Logs:</strong> View and manage billing records</li>
                                     </ul>
                                 </div>

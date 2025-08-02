@@ -60,7 +60,7 @@
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                         <li class="nav-item">
-                            <a href="/teacher-list" class="nav-link">
+                            <a href="{{ route('teacher-list') }}" class="nav-link">
                                 <i class="nav-icon fa fa-users"></i>
                                 <p>Teacher List</p>
                             </a>
@@ -72,27 +72,27 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/roomList" class="nav-link">
+                            <a href="{{ route('roomList') }}" class="nav-link">
                                 <i class="nav-icon fa fa-building"></i>
                                 <p>Room List</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/family-list" class="nav-link">
+                            <a href="{{ route('family-list') }}" class="nav-link">
                                 <i class="nav-icon fa fa-home"></i>
                                 <p>Family List</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/student-list" class="nav-link">
+                            <a href="{{ route('student-list') }}" class="nav-link">
                                 <i class="nav-icon fa fa-graduation-cap"></i>
                                 <p>Student List</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/subscription" class="nav-link">
-                                <i class="nav-icon fa fa-credit-card"></i>
-                                <p>Subscription Plans</p>
+                            <a href="{{ route('geofence') }}" class="nav-link">
+                                <i class="nav-icon fa fa-map-marker-alt"></i>
+                                <p>Geofence</p>
                             </a>
                         </li>
                         <li class="nav-item">
@@ -128,7 +128,7 @@
                                 });
                             </script>
                         @endif
-                            <a href="addStudent" class="btn btn-primary mb-3">Add Student</a>
+                            <a href="{{ route('addStudent') }}" class="btn btn-primary mb-3">Add Student</a>
                             <div class="table-responsive">
                                 <table id="studentsTable" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
                                     <thead>
@@ -187,13 +187,6 @@
                                 </table>
                             </div>
                         
-                    @elseif (strpos(session('userAccess')->access, 'teacher') !== false)
-                        <p>Teacher Good Morning, {{ session('userAccess')->access }}</p>
-                    @else
-                        <p>Access Denied</p>
-                    @endif
-
-                   
                 </div>
             </section>
         </div>

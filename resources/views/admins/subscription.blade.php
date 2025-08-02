@@ -59,7 +59,7 @@
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                         <li class="nav-item">
-                            <a href="/teacher-list" class="nav-link">
+                            <a href="{{ route('teacher-list') }}" class="nav-link">
                                 <i class="nav-icon fa fa-users"></i>
                                 <p>Teacher List</p>
                             </a>
@@ -71,25 +71,31 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/roomList" class="nav-link">
+                            <a href="{{ route('roomList') }}" class="nav-link">
                                 <i class="nav-icon fa fa-building"></i>
                                 <p>Room List</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/family-list" class="nav-link">
+                            <a href="{{ route('family-list') }}" class="nav-link">
                                 <i class="nav-icon fa fa-home"></i>
                                 <p>Family List</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/student-list" class="nav-link">
+                            <a href="{{ route('student-list') }}" class="nav-link">
                                 <i class="nav-icon fa fa-graduation-cap"></i>
                                 <p>Student List</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/subscription" class="nav-link">
+                            <a href="{{ route('geofence') }}" class="nav-link">
+                                <i class="nav-icon fa fa-map-marker-alt"></i>
+                                <p>Geofence</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('subscription.index') }}" class="nav-link">
                                 <i class="nav-icon fa fa-credit-card"></i>
                                 <p>Subscription Plans</p>
                             </a>
@@ -165,7 +171,7 @@
                     <div class="modal fade" id="addSubscriptionModal" tabindex="-1" role="dialog" aria-labelledby="addSubscriptionModalLabel" aria-hidden="true">
                       <div class="modal-dialog" role="document">
                          <div class="modal-content">
-                            <form action="/subscription/" method="POST">
+                            <form action="{{ route('subscription.store') }}" method="POST">
                                 @csrf
                                 <div class="modal-header">
                                     <h5 class="modal-title" id="addSubscriptionModalLabel">Add New Subscription Plan</h5>

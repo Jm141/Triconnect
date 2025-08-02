@@ -59,7 +59,8 @@ class GeoFenceController extends Controller
      */
     public function create()
     {
-        return view('geofences.create', );
+        $geofences = GeoFence::orderBy('created_at', 'desc')->get();
+        return view('admins.geofence', compact('geofences'));
     }
 
     /**

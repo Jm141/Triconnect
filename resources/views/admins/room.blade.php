@@ -63,7 +63,7 @@
             <nav class="mt-2">
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                     <li class="nav-item">
-                        <a href="/teacher-list" class="nav-link">
+                        <a href="{{ route('teacher-list') }}" class="nav-link">
                             <i class="nav-icon fa fa-users"></i>
                             <p>Teacher List</p>
                         </a>
@@ -75,32 +75,32 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="/roomList" class="nav-link">
+                        <a href="{{ route('roomList') }}" class="nav-link">
                             <i class="nav-icon fa fa-building"></i>
                             <p>Room List</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="/family-list" class="nav-link">
+                        <a href="{{ route('family-list') }}" class="nav-link">
                             <i class="nav-icon fa fa-home"></i>
                             <p>Family List</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="/student-list" class="nav-link">
+                        <a href="{{ route('student-list') }}" class="nav-link">
                             <i class="nav-icon fa fa-graduation-cap"></i>
                             <p>Student List</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="/subscription" class="nav-link">
-                            <i class="nav-icon fa fa-credit-card"></i>
-                            <p>Subscription Plans</p>
+                        <a href="{{ route('geofence') }}" class="nav-link">
+                            <i class="nav-icon fa fa-map-marker-alt"></i>
+                            <p>Geofence</p>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="{{ route('billing.index') }}" class="nav-link">
-                            <i class="nav-icon fa fa-file-invoice-dollar"></i>
+                            <i class="nav-icon fa fa-credit-card"></i>
                             <p>Billing Logs</p>
                         </a>
                     </li>
@@ -114,7 +114,7 @@
         <section class="content">
             <div class="container-fluid">
                 
-<a href="addRooms" class="btn btn-primary mb-3">Add Room</a>
+<a href="{{ route('addRooms') }}" class="btn btn-primary mb-3">Add Room</a>
 <div class="table-responsive">
     <table id="roomsTable" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
         <thead>

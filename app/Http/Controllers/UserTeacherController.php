@@ -252,4 +252,78 @@ class UserTeacherController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
+    /**
+     * Export all attendance data for the current teacher to CSV.
+     *
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     */
+    public function exportAttendanceCSV(Request $request)
+    {
+        // Get current user (teacher)
+        $user = auth()->user();
+        $userAccess = UserAccess::where('userCode', $user->userCode)->first();
+        
+        if (!$userAccess || strpos($userAccess->access, 'teacher') === false) {
+            return redirect()->back()->with('error', 'Access denied. Teachers only.');
+        }
+
+        $teacherStaffCode = $userAccess->userCode;
+
+        $attendance = Attendance::where('teacher_staff_code', $teacherStaffCode)
+            ->where('attendance_type', 'qr_scan')
+            ->with(['schedule'])
+            ->orderBy('time_scan', 'desc')
+            ->get();
+
+        $filename = "attendance_export_" . date('Y-m-d_H-i-s') . ".csv";
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename={$filename}",
+        ];
+
+        $callback = function() use ($attendance) {
+            $file = fopen('php://output', 'w');
+            
+            // CSV Headers
+            fputcsv($file, [
+                'Date',
+                'Subject',
+                'Room',
+                'Student Code',
+                'Student Name',
+                'Time Scanned',
+                'Status',
+                'Created At'
+            ]);
+
+            foreach ($attendance as $record) {
+                // Format the student name for export
+                $displayName = 'Unknown';
+                if ($record->name) {
+                    $nameParts = explode('.', $record->name);
+                    $displayName = count($nameParts) >= 2 
+                        ? ucfirst($nameParts[0]) . ' ' . ucfirst($nameParts[1])
+                        : ucfirst($record->name);
+                }
+                
+                fputcsv($file, [
+                    $record->time_scan->format('Y-m-d'),
+                    $record->subject_name ?? 'N/A',
+                    $record->roomCode ?? 'N/A',
+                    $record->userCode,
+                    $displayName,
+                    $record->time_scan->format('H:i:s'),
+                    $record->status,
+                    $record->created_at->format('Y-m-d H:i:s')
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 } 
